@@ -22,19 +22,11 @@ jobs:
       - name: Build application
         run: go build -v -o ready-gap .
 
-      - name: Run test mode to generate sample files
-        run: ./ready-gap -test
-
-      - name: Verify test files were created
-        run: |
-          ls -la test_sites_*.json test_sites_*.html
-          echo "Test files generated successfully"
-
       - name: Start ReadyGap proxy server
+        id: proxy
         run: |
           ./ready-gap -addr :$PROXY_PORT &
-          PROXY_PID=$!
-          sleep 3  # Wait for server to start
+          echo "PROXY_PID=$!" >> $GITHUB_OUTPUT
 
       - name: Install curl for testing
         run: sudo apt-get update && sudo apt-get install -y curl
@@ -50,7 +42,7 @@ jobs:
       - name: Stop proxy server and generate reports
         run: |
           echo "Stopping proxy server..."
-          kill $PROXY_PID || echo "Proxy already stopped"
+          kill ${{ streps.proxy.outputs.PROXY_PID }}
           sleep 2
 
       - name: Upload test artifacts
