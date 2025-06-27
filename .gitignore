@@ -1,5 +1,9 @@
 # Binary files
 ready-gap
+*.exe
+*.dll
+*.so
+*.dylib
 
 # Generated reports and data files
 sites_dump.json
@@ -48,4 +52,4 @@ coverage.txt
 coverage.html
 
 # Dependency directories (if using vendor)
-vendor/ 
+vendor/

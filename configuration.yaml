@@ -1,0 +1,6 @@
+allowed_hosts:
+  - google.com:443
+  - 192.168.1.10
+  - api.github.com
+  - httpbin.org
+

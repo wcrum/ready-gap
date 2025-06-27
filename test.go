@@ -17,14 +17,15 @@ const (
 func RunTest() {
 	// Create sample test data
 	sites := createTestData()
+	knownPaths := createTestKnownPaths()
 
 	// Generate JSON file
-	if err := generateTestJSON(sites); err != nil {
+	if err := generateTestJSON(sites, knownPaths); err != nil {
 		log.Fatalf("Failed to generate JSON: %v", err)
 	}
 
 	// Generate HTML file
-	if err := generateTestHTML(sites); err != nil {
+	if err := generateTestHTML(sites, knownPaths); err != nil {
 		log.Fatalf("Failed to generate HTML: %v", err)
 	}
 
@@ -37,7 +38,7 @@ func RunTest() {
 func createTestData() map[string]*Set {
 	sites := make(map[string]*Set)
 
-	// Test host 1: Google services
+	// Test host 1: Google services (KNOWN - in config)
 	googleSet := NewSet()
 	googleSet.Add("/search?q=test")
 	googleSet.Add("/maps/api/geocode/json")
@@ -45,9 +46,9 @@ func createTestData() map[string]*Set {
 	googleSet.Add("/apis/calendar/v3/calendars")
 	googleSet.Add("/apis/drive/v3/files")
 	googleSet.Add("/apis/gmail/v1/users/me/messages")
-	sites["googleapis.com:443"] = googleSet
+	sites["google.com:443"] = googleSet
 
-	// Test host 2: GitHub
+	// Test host 2: GitHub (KNOWN - in config)
 	githubSet := NewSet()
 	githubSet.Add("/api/v3/user")
 	githubSet.Add("/api/v3/repos/owner/repo/commits")
@@ -59,7 +60,7 @@ func createTestData() map[string]*Set {
 	githubSet.Add("/api/v3/repos/owner/repo/actions/runs")
 	sites["api.github.com:443"] = githubSet
 
-	// Test host 3: AWS services
+	// Test host 3: AWS services (UNKNOWN - not in config)
 	awsSet := NewSet()
 	awsSet.Add("/s3/bucket-name/file.txt")
 	awsSet.Add("/ec2/instances/i-1234567890abcdef0")
@@ -69,7 +70,7 @@ func createTestData() map[string]*Set {
 	awsSet.Add("/rds/db-instances/my-database")
 	sites["aws.amazon.com:443"] = awsSet
 
-	// Test host 4: Internal service
+	// Test host 4: Internal service (KNOWN - in config)
 	internalSet := NewSet()
 	internalSet.Add("/api/v1/users")
 	internalSet.Add("/api/v1/users/123")
@@ -81,9 +82,9 @@ func createTestData() map[string]*Set {
 	internalSet.Add("/api/v1/data/analytics")
 	internalSet.Add("/api/v1/data/reports")
 	internalSet.Add("/api/v1/data/export")
-	sites["internal-api.company.com:8080"] = internalSet
+	sites["192.168.1.10:8080"] = internalSet
 
-	// Test host 5: CDN
+	// Test host 5: CDN (UNKNOWN - not in config)
 	cdnSet := NewSet()
 	cdnSet.Add("/static/js/app.js")
 	cdnSet.Add("/static/css/styles.css")
@@ -93,19 +94,88 @@ func createTestData() map[string]*Set {
 	cdnSet.Add("/static/videos/demo.mp4")
 	sites["cdn.example.com:443"] = cdnSet
 
-	// Test host 6: Empty host (no paths)
+	// Test host 6: Empty host (UNKNOWN - not in config)
 	emptySet := NewSet()
 	sites["empty-host.com:80"] = emptySet
+
+	// Test host 7: HTTPBin (KNOWN - in config)
+	httpbinSet := NewSet()
+	httpbinSet.Add("/get")
+	httpbinSet.Add("/status/200")
+	httpbinSet.Add("/json")
+	httpbinSet.Add("/headers")
+	httpbinSet.Add("/ip")
+	sites["httpbin.org:443"] = httpbinSet
 
 	return sites
 }
 
+// createTestKnownPaths generates known paths data for testing
+func createTestKnownPaths() map[string]*Set {
+	knownPaths := make(map[string]*Set)
+
+	// Known paths for google.com (from config)
+	googleKnown := NewSet()
+	googleKnown.Add("/search?q=test")
+	googleKnown.Add("/maps/api/geocode/json")
+	googleKnown.Add("/apis/oauth2/v1/tokeninfo")
+	googleKnown.Add("/apis/calendar/v3/calendars")
+	googleKnown.Add("/apis/drive/v3/files")
+	googleKnown.Add("/apis/gmail/v1/users/me/messages")
+	knownPaths["google.com:443"] = googleKnown
+
+	// Known paths for 192.168.1.10 (from config)
+	internalKnown := NewSet()
+	internalKnown.Add("/api/v1/users")
+	internalKnown.Add("/api/v1/users/123")
+	internalKnown.Add("/api/v1/users/123/profile")
+	internalKnown.Add("/api/v1/users/123/settings")
+	internalKnown.Add("/api/v1/auth/login")
+	internalKnown.Add("/api/v1/auth/logout")
+	internalKnown.Add("/api/v1/auth/refresh")
+	internalKnown.Add("/api/v1/data/analytics")
+	internalKnown.Add("/api/v1/data/reports")
+	internalKnown.Add("/api/v1/data/export")
+	knownPaths["192.168.1.10:8080"] = internalKnown
+
+	// Known paths for api.github.com (from config)
+	githubKnown := NewSet()
+	githubKnown.Add("/api/v3/user")
+	githubKnown.Add("/api/v3/repos/owner/repo/commits")
+	githubKnown.Add("/api/v3/repos/owner/repo/issues")
+	githubKnown.Add("/api/v3/repos/owner/repo/pulls")
+	githubKnown.Add("/api/v3/repos/owner/repo/contents/README.md")
+	githubKnown.Add("/api/v3/repos/owner/repo/branches")
+	githubKnown.Add("/api/v3/repos/owner/repo/releases")
+	githubKnown.Add("/api/v3/repos/owner/repo/actions/runs")
+	knownPaths["api.github.com:443"] = githubKnown
+
+	// Known paths for httpbin.org (from config)
+	httpbinKnown := NewSet()
+	httpbinKnown.Add("/get")
+	httpbinKnown.Add("/status/200")
+	httpbinKnown.Add("/json")
+	httpbinKnown.Add("/headers")
+	httpbinKnown.Add("/ip")
+	knownPaths["httpbin.org:443"] = httpbinKnown
+
+	return knownPaths
+}
+
 // generateTestJSON creates a JSON file with the test data
-func generateTestJSON(sites map[string]*Set) error {
-	// Convert sites map to a serializable format
-	sitesData := make(map[string][]string)
+func generateTestJSON(sites map[string]*Set, knownPaths map[string]*Set) error {
+	// Create enhanced JSON structure
+	sitesData := SitesData{
+		Hosts: make(map[string]HostData),
+	}
+
 	for host, set := range sites {
-		sitesData[host] = set.List()
+		allPaths := set.List()
+		sitesData.Hosts[host] = HostData{
+			Paths:      allPaths,
+			TotalPaths: len(allPaths),
+			HostKnown:  isKnownHost(host),
+		}
 	}
 
 	// Marshal to JSON
@@ -124,13 +194,17 @@ func generateTestJSON(sites map[string]*Set) error {
 }
 
 // generateTestHTML creates an HTML file from the test data
-func generateTestHTML(sites map[string]*Set) error {
+func generateTestHTML(sites map[string]*Set, knownPaths map[string]*Set) error {
 	// Convert sites data to template format
 	var hosts []HostInfo
 	for host, set := range sites {
+		allPaths := set.List()
+
 		hosts = append(hosts, HostInfo{
-			Host:  host,
-			Paths: set.List(),
+			Host:      host,
+			Paths:     allPaths,
+			Known:     isKnownHost(host),
+			PathCount: len(allPaths),
 		})
 	}
 
