@@ -42,7 +42,7 @@ jobs:
       - name: Stop proxy server and generate reports
         run: |
           echo "Stopping proxy server..."
-          kill ${{ streps.proxy.outputs.PROXY_PID }}
+          kill ${{ steps.proxy.outputs.PROXY_PID }}
           sleep 2
 
       - name: Upload test artifacts
