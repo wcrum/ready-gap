@@ -1,0 +1,51 @@
+# Binary files
+ready-gap
+
+# Generated reports and data files
+sites_dump.json
+sites_report.html
+test_sites_dump.json
+test_sites_report.html
+
+# Go build artifacts
+*.o
+*.a
+*.test
+
+# Go workspace file
+go.work
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage reports
+coverage.txt
+coverage.html
+
+# Dependency directories (if using vendor)
+vendor/ 

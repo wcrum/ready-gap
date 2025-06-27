@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadyGap</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a clean, modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex; /* Use flexbox for centering content */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            padding: 1rem; /* Add some padding around the content */
+        }
+        
+        /* Smooth transition for expand/collapse */
+        .paths-container {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+            max-height: 1000px;
+            opacity: 1;
+        }
+        
+        .paths-container.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        /* Rotate chevron icon */
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+        
+        .chevron.rotated {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="selection:bg-blue-200">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl text-gray-800">
+        <!-- Title Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-blue-600 mb-2 rounded-md">ReadyGap</h1>
+            <p class="text-lg text-gray-600">Connections During Pipeline</p>
+        </header>
+
+        <!-- Main Content Section: List of Connections -->
+        <main class="text-left">
+            {{if .Hosts}}
+            <ul class="space-y-6">
+                {{range $index, $host := .Hosts}}
+                <li class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="togglePaths('{{$index}}')">
+                        <h3 class="text-xl font-semibold text-gray-700">{{.Host}}</h3>
+                        {{if .Paths}}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-500">{{len .Paths}} requests</span>
+                            <svg class="chevron w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        {{end}}
+                    </div>
+                    {{if .Paths}}
+                    <div id="paths-{{$index}}" class="paths-container mt-3">
+                        <ul class="list-disc list-inside ml-4 text-gray-600 space-y-1">
+                            {{range .Paths}}
+                            <li class="hover:bg-gray-100 px-2 py-1 rounded transition-colors">{{.}}</li>
+                            {{end}}
+                        </ul>
+                    </div>
+                    {{else}}
+                    <p class="text-gray-500 italic mt-2">No requests recorded</p>
+                    {{end}}
+                </li>
+                {{end}}
+            </ul>
+            {{else}}
+            <div class="text-center py-8">
+                <p class="text-gray-500 text-lg">No connections recorded yet</p>
+            </div>
+            {{end}}
+        </main>
+    </div>
+
+    <script>
+        function togglePaths(index) {
+            const pathsContainer = document.getElementById(`paths-${index}`);
+            const chevron = pathsContainer.previousElementSibling.querySelector('.chevron');
+            
+            // Toggle the collapsed class
+            if (pathsContainer.classList.contains('collapsed')) {
+                // Expand
+                pathsContainer.classList.remove('collapsed');
+                chevron.classList.add('rotated');
+            } else {
+                // Collapse
+                pathsContainer.classList.add('collapsed');
+                chevron.classList.remove('rotated');
+            }
+        }
+        
+        // Optional: Add keyboard support
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                const focusedElement = document.activeElement;
+                if (focusedElement && focusedElement.onclick) {
+                    event.preventDefault();
+                    focusedElement.onclick();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

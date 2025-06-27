@@ -1,0 +1,64 @@
+name: Build and Test ReadyGap
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      PROXY_PORT: 8080
+      TEST_TIMEOUT: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.4'
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build application
+        run: go build -v -o ready-gap .
+
+      - name: Run test mode to generate sample files
+        run: ./ready-gap -test
+
+      - name: Verify test files were created
+        run: |
+          ls -la test_sites_*.json test_sites_*.html
+          echo "Test files generated successfully"
+
+      - name: Start ReadyGap proxy server
+        run: |
+          ./ready-gap -addr :$PROXY_PORT &
+          PROXY_PID=$!
+          sleep 3  # Wait for server to start
+
+      - name: Install curl for testing
+        run: sudo apt-get update && sudo apt-get install -y curl
+
+      - name: Make test requests through proxy
+        run: |
+          export http_proxy=http://localhost:$PROXY_PORT
+          export https_proxy=http://localhost:$PROXY_PORT
+          curl google.com
+          curl example.com
+          curl github.com
+          
+      - name: Stop proxy server and generate reports
+        run: |
+          echo "Stopping proxy server..."
+          kill $PROXY_PID || echo "Proxy already stopped"
+          sleep 2
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ready-gap-reports
+          path: |
+            sites_dump.json
+            sites_report.html
+          retention-days: 7
